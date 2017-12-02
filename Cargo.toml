@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Hordur Freyr Yngvason <hordurf@gmail.com>"]
 
 [dependencies]
+project_euler = { path = "../project-euler-rust" }
