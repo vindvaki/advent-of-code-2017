@@ -1,14 +1,9 @@
-use std::env;
-use std::fs::File;
-use std::io::prelude::*;
+extern crate aoc2017;
+
+use aoc2017::read_fixture;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let path = args.get(1).expect("fixture path must be provided");
-    let mut file = File::open(path).expect("unable to open file");
-    let mut data = String::new();
-    file.read_to_string(&mut data).expect("unable to read file");
-
+    let data = read_fixture();
     part_1(&data.as_str());
     part_2(&data.as_str());
 }
