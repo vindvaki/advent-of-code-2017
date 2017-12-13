@@ -5,3 +5,4 @@ authors = ["Hordur Freyr Yngvason <hordurf@gmail.com>"]
 
 [dependencies]
 project_euler = { path = "../project-euler-rust" }
+num = "0.1"
