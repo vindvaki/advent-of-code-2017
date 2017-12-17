@@ -21,13 +21,12 @@ fn part_1(input: &str, len: usize) -> Dance {
 fn part_2(input: &str, len: usize) -> String {
     let mut dance = Dance::new(len);
     let ops: Vec<&str> = input.split(",").map(|s| s.trim()).collect();
-    let origin = format!("{}", dance);
+    let origin = dance.clone();
     let cycle_len = (1..).find(|_| {
         for op in ops.iter() {
             dance.apply(op);
         }
-        let s = format!("{}", dance);
-        s == origin
+        dance == origin
     }).unwrap(); // safe because it finished
     for _ in 0..(1_000_000_000 % cycle_len) {
         for op in ops.iter() {
@@ -37,7 +36,7 @@ fn part_2(input: &str, len: usize) -> String {
     format!("{}", dance)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct Dance {
     len: usize,
     offset: usize,
@@ -70,35 +69,33 @@ impl Dance {
         res
     }
 
+    fn swap(&mut self, i: usize, j: usize) {
+        self.i2c.swap(i, j);
+        self.c2i.insert(self.i2c[i], i);
+        self.c2i.insert(self.i2c[j], j);
+    }
+
     fn apply(&mut self, op: &str) {
+        let split = op[1..].split('/');
         match &op[0..1] {
             "s" => {
                 let add: usize = op[1..].parse().unwrap();
-                self.offset += add;
-                self.offset %= self.len;
+                self.offset = (self.offset + add) % self.len;
             },
             "x" => {
-                let mut parts = op[1..].split('/');
-                let mut i: usize = parts.next().unwrap().parse().unwrap();
-                let mut j: usize = parts.next().unwrap().parse().unwrap();
-                i = (i + self.len - self.offset) % self.len;
-                j = (j + self.len - self.offset) % self.len;
-                self.i2c.swap(i, j);
-                self.c2i.insert(self.i2c[i], i);
-                self.c2i.insert(self.i2c[j], j);
+                let parts: Vec<usize> = split.map(|s| s.parse().unwrap()).collect();
+                let i = (parts[0] + self.len - self.offset) % self.len;
+                let j = (parts[1] + self.len - self.offset) % self.len;
+                self.swap(i, j);
             },
             "p" => {
-                let mut parts = op[1..].split('/');
-                let a: u32 = parts.next().unwrap().chars().next().unwrap() as u32;
-                let b: u32 = parts.next().unwrap().chars().next().unwrap() as u32;
-                let i = self.c2i[&a];
-                let j = self.c2i[&b];
-                self.i2c.swap(i, j);
-                self.c2i.insert(a, j);
-                self.c2i.insert(b, i);
+                let parts: Vec<u32> = split.map(|s| s.chars().next().unwrap() as u32).collect();
+                let i = self.c2i[&parts[0]];
+                let j = self.c2i[&parts[1]];
+                self.swap(i, j);
             },
             _ => {},
-        }
+        };
     }
 }
 
