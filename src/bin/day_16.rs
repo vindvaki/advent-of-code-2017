@@ -29,8 +29,6 @@ fn part_2(input: &str, len: usize) -> String {
         let s = format!("{}", dance);
         s == origin
     }).unwrap(); // safe because it finished
-    // reset dance
-    dance = Dance::new(len);
     for _ in 0..(1_000_000_000 % cycle_len) {
         for op in ops.iter() {
             dance.apply(op);
