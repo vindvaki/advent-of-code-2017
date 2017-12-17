@@ -22,18 +22,12 @@ fn part_2(input: &str, len: usize) -> String {
     let mut dance = Dance::new(len);
     let ops: Vec<&str> = input.split(",").map(|s| s.trim()).collect();
     let origin = format!("{}", dance);
-    let mut seen = HashMap::new();
-    let cycle_len = (0..).find(|&i| {
+    let cycle_len = (1..).find(|_| {
         for op in ops.iter() {
             dance.apply(op);
         }
         let s = format!("{}", dance);
-        if seen.contains_key(&s) {
-            true
-        } else {
-            seen.insert(s, i);
-            false
-        }
+        s == origin
     }).unwrap(); // safe because it finished
     // reset dance
     dance = Dance::new(len);
