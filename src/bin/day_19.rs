@@ -14,86 +14,19 @@ fn new_board(input: &str) -> Board {
 }
 
 fn part_1(input: &str) -> String {
-    let board = new_board(input);
-    let mut result = String::new();
-    let rows = board.len();
-    let cols = board[0].len();
-
-    let mut i = 0;
-    let mut j = match (0..cols).find(|&j| board[0][j] == '|') {
-        Some(v) => v,
-        None => panic!("Invalid board!"),
-    };
-    let mut direction = 'v';
-    loop {
-        match board[i][j] {
-            // terminating condition
-            ' ' => break,
-            // same direction
-            '|' => {},
-            '-' => {},
-            // seek next direction
-            '+' => {
-                match direction {
-                    'v' | '^' => {
-                        if j > 0 && (board[i][j - 1] == '-' || board[i][j - 1].is_alphabetic()) {
-                            direction = '<';
-                        }
-                        if j < cols - 1 && (board[i][j + 1] == '-' || board[i][j + 1].is_alphabetic()) {
-                            direction = '>';
-                        }
-                    },
-                    '>' | '<' => {
-                        if i > 0 && (board[i - 1][j] == '|' || board[i - 1][j].is_alphabetic()) {
-                            direction = '^'
-                        }
-                        if i < rows - 1 && (board[i + 1][j] == '|' || board[i + 1][j].is_alphabetic()) {
-                            direction = 'v'
-                        }
-                    },
-                    _ => panic!("invalid direction"),
-                };
-            },
-            // same direction
-            _ => result.push(board[i][j]),
-        };
-        match direction {
-            'v' => {
-                if i == rows - 1{
-                    break;
-                } else {
-                    i += 1;
-                }
-            },
-            '^' => {
-                if i == 0 {
-                    break;
-                } else {
-                    i -= 1;
-                }
-            },
-            '>' => {
-                if j == cols - 1 {
-                    break;
-                } else {
-                    j += 1;
-                }
-            },
-            '<' => {
-                if j == 0 {
-                    break;
-                } else {
-                    j -= 1;
-                }
-            },
-            _ => panic!("invalid direction"),
-        };
-    }
-    result
+    let (s, _) = solve(input);
+    s
 }
 
 fn part_2(input: &str) -> usize {
+    let (_, s) = solve(input);
+    s
+}
+
+fn solve(input: &str) -> (String, usize) {
     let board = new_board(input);
+    let mut path = String::new();
+    let mut count = 0;
     let rows = board.len();
     let cols = board[0].len();
 
@@ -103,7 +36,6 @@ fn part_2(input: &str) -> usize {
         None => panic!("Invalid board!"),
     };
     let mut direction = 'v';
-    let mut result = 0;
     loop {
         match board[i][j] {
             // terminating condition
@@ -134,7 +66,7 @@ fn part_2(input: &str) -> usize {
                 };
             },
             // same direction
-            _ => {},
+            _ => path.push(board[i][j]),
         };
         match direction {
             'v' => {
@@ -167,9 +99,9 @@ fn part_2(input: &str) -> usize {
             },
             _ => panic!("invalid direction"),
         };
-        result += 1;
+        count += 1;
     }
-    result
+    (path, count)
 }
 
 #[cfg(test)]
