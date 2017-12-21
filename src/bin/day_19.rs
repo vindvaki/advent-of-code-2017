@@ -6,6 +6,7 @@ type Board = Vec<Vec<char>>;
 fn main() {
     let input = read_fixture();
     println!("part_1: {}", part_1(input.as_str()));
+    println!("part_2: {}", part_2(input.as_str()));
 }
 
 fn new_board(input: &str) -> Board {
@@ -91,6 +92,85 @@ fn part_1(input: &str) -> String {
     result
 }
 
+fn part_2(input: &str) -> usize {
+    let board = new_board(input);
+    let rows = board.len();
+    let cols = board[0].len();
+
+    let mut i = 0;
+    let mut j = match (0..cols).find(|&j| board[0][j] == '|') {
+        Some(v) => v,
+        None => panic!("Invalid board!"),
+    };
+    let mut direction = 'v';
+    let mut result = 0;
+    loop {
+        match board[i][j] {
+            // terminating condition
+            ' ' => break,
+            // same direction
+            '|' => {},
+            '-' => {},
+            // seek next direction
+            '+' => {
+                match direction {
+                    'v' | '^' => {
+                        if j > 0 && (board[i][j - 1] == '-' || board[i][j - 1].is_alphabetic()) {
+                            direction = '<';
+                        }
+                        if j < cols - 1 && (board[i][j + 1] == '-' || board[i][j + 1].is_alphabetic()) {
+                            direction = '>';
+                        }
+                    },
+                    '>' | '<' => {
+                        if i > 0 && (board[i - 1][j] == '|' || board[i - 1][j].is_alphabetic()) {
+                            direction = '^'
+                        }
+                        if i < rows - 1 && (board[i + 1][j] == '|' || board[i + 1][j].is_alphabetic()) {
+                            direction = 'v'
+                        }
+                    },
+                    _ => panic!("invalid direction"),
+                };
+            },
+            // same direction
+            _ => {},
+        };
+        match direction {
+            'v' => {
+                if i == rows - 1{
+                    break;
+                } else {
+                    i += 1;
+                }
+            },
+            '^' => {
+                if i == 0 {
+                    break;
+                } else {
+                    i -= 1;
+                }
+            },
+            '>' => {
+                if j == cols - 1 {
+                    break;
+                } else {
+                    j += 1;
+                }
+            },
+            '<' => {
+                if j == 0 {
+                    break;
+                } else {
+                    j -= 1;
+                }
+            },
+            _ => panic!("invalid direction"),
+        };
+        result += 1;
+    }
+    result
+}
 
 #[cfg(test)]
 mod tests {
@@ -106,5 +186,19 @@ mod tests {
             "     +B-+  +--+ ",
         ].join("\n");
         assert_eq!(part_1(input.as_str()), "ABCDEF".to_owned());
+    }
+
+    #[test]
+    fn test_part_2() {
+        use part_2;
+        let input =[
+            "     |          ",
+            "     |  +--+    ",
+            "     A  |  C    ",
+            " F---|----E|--+ ",
+            "     |  |  |  D ",
+            "     +B-+  +--+ ",
+        ].join("\n");
+        assert_eq!(part_2(input.as_str()), 38);
     }
 }
