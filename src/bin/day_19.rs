@@ -40,9 +40,6 @@ fn solve(input: &str) -> (String, usize) {
         match board[i][j] {
             // terminating condition
             ' ' => break,
-            // same direction
-            '|' => {},
-            '-' => {},
             // seek next direction
             '+' => {
                 match direction {
@@ -66,6 +63,8 @@ fn solve(input: &str) -> (String, usize) {
                 };
             },
             // same direction
+            '|' | '-' => {},
+            // alphanumeric
             _ => path.push(board[i][j]),
         };
         match direction {
