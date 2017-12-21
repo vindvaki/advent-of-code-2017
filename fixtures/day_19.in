@@ -1,0 +1,6 @@
+--2017-12-21 00:03:17--  https://adventofcode.com/2017/day/19/input
+Resolving adventofcode.com (adventofcode.com)... 54.81.227.71, 52.55.170.144
+Connecting to adventofcode.com (adventofcode.com)|54.81.227.71|:443... connected.
+HTTP request sent, awaiting response... 400 Bad Request
+2017-12-21 00:03:18 ERROR 400: Bad Request.
+
