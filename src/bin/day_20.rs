@@ -3,45 +3,80 @@ extern crate aoc2017;
 use aoc2017::read_fixture;
 use std::fmt;
 use std::num::ParseIntError;
+use std::fmt::{Debug, Display};
+use std::error::Error;
+use std::str::FromStr;
 
 fn main() {
     let input = read_fixture();
     for line in input.lines() {
-        for point_s in line.split(", ") {
-            let point: Point3 = point_s.parse().expect("unable to parse point");
-            println!("{:?}", point);
-        }
+        let particle = line.parse::<Particle>();
+        println!("{:?}", particle);
     }
 }
 
 #[derive(Debug)]
+struct Particle {
+    p: Point3,
+    v: Point3,
+    a: Point3,
+}
+
+type ParseParticleError = ParseSplitError<ParsePoint3Error>;
+
+impl FromStr for Particle {
+    type Err = ParseParticleError;
+
+    fn from_str(particle_str: &str) -> Result<Self, Self::Err> {
+        let points_res: Result<Vec<Point3>, ParsePoint3Error> = particle_str
+            .trim()
+            .split(", ")
+            .map(|point_str| point_str.parse())
+            .collect();
+        let points = points_res?;
+        if points.len() != 3 {
+            return Err(ParseSplitError::WrongSize(points.len()))
+        }
+        Ok(Particle { p: points[0], v: points[1], a: points[2] })
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 struct Point3(i64, i64, i64);
 
-#[derive(Debug)]
-enum ParsePoint3Error {
-    ParseIntError(ParseIntError),
-    WrongCoordinateCount(usize),
-}
-
-impl From<ParseIntError> for ParsePoint3Error {
-    fn from(error: ParseIntError) -> Self {
-        ParsePoint3Error::ParseIntError(error)
+impl Point3 {
+    fn norm_1(&self) -> i64 {
+        self.0.abs() + self.1.abs() + self.2.abs()
     }
 }
 
-impl fmt::Display for ParsePoint3Error {
+#[derive(Debug)]
+enum ParseSplitError<E: Debug> {
+    ParseComponentError(E),
+    WrongSize(usize),
+}
+
+impl<E: Error> From<E> for ParseSplitError<E> {
+    fn from(error: E) -> Self {
+        ParseSplitError::ParseComponentError(error)
+    }
+}
+
+impl<E: Error> Display for ParseSplitError<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl std::error::Error for ParsePoint3Error {
+impl<E: Error> Error for ParseSplitError<E> {
     fn description(&self) -> &str {
-        "Could not parse Point3"
+        "Could not parse split"
     }
 }
 
-impl std::str::FromStr for Point3 {
+type ParsePoint3Error = ParseSplitError<ParseIntError>;
+
+impl FromStr for Point3 {
     type Err = ParsePoint3Error;
 
     fn from_str(point3_str: &str) -> Result<Self, Self::Err> {
@@ -53,7 +88,7 @@ impl std::str::FromStr for Point3 {
             .collect();
         let coords = coords_res?;
         if coords.len() != 3 {
-            return Err(ParsePoint3Error::WrongCoordinateCount(coords.len()))
+            return Err(ParseSplitError::WrongSize(coords.len()))
         }
         Ok(Point3(coords[0], coords[1], coords[2]))
     }
