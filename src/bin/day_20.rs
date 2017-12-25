@@ -8,131 +8,62 @@ use std::error::Error;
 use std::str::FromStr;
 use std::collections::HashSet;
 use std::collections::HashMap;
+use std::ops::Add;
 
 fn main() {
     let input = read_fixture();
-    println!("{}", input.lines().count());
     println!("part_1: {}", part_1(&input));
     println!("part_2: {}", part_2(&input));
 }
 
 fn part_1(input: &str) -> usize {
-    let particles = parse_particles(input);
+    let particles: Vec<Particle> = input.lines()
+        .map(|line| line.parse().expect("Unable to parse particle"))
+        .collect();
     (0..particles.len()).min_by_key(|&i| particles[i].a.norm_1()).unwrap()
 }
 
 fn part_2(input: &str) -> usize {
-    let particles = parse_particles(input);
-
-    // gather collisions
-    let mut collisions = HashMap::new();
-    for i in 0..particles.len() {
-        for j in 0..i {
-            let t = particles[i].collision_time(&particles[j]);
-            if !collisions.contains_key(&t) {
-                collisions.insert(t, HashSet::new());
-            }
-            if let Some(cs) = collisions.get_mut(&t) {
-                cs.insert(i);
-                cs.insert(j);
+    let mut particles = HashMap::new();
+    for line in input.lines() {
+        let particle: Particle = line.parse().expect("Unable to parse");
+        particles.insert(particle.p, particle);
+    }
+    for _ in 0..500 {
+        let mut next_particles = HashMap::new();
+        let mut seen = HashSet::new();
+        for (_, particle) in particles.iter() {
+            let q = particle.step();
+            if seen.contains(&q.p) {
+                next_particles.remove(&q.p);
+            } else {
+                seen.insert(q.p.clone());
+                next_particles.insert(q.p.clone(), q);
             }
         }
+        particles = next_particles;
     }
-
-    // eliminate in collision order
-    let mut eliminated = HashSet::new();
-    for (t, collisions_at_t) in collisions.iter() {
-        let to_eliminate: Vec<usize> = collisions_at_t
-            .difference(&eliminated)
-            .map(|i| i.clone())
-            .collect();
-        if to_eliminate.len() > 1 {
-            for &i in to_eliminate.iter() {
-                eliminated.insert(i);
-            }
-        }
-    }
-    particles.len() - eliminated.len()
+    particles.len()
 }
 
-fn parse_particles(input: &str) -> Vec<Particle> {
-    input.lines()
-        .map(|line| line.parse().expect("Unable to parse particle"))
-        .collect()
-}
-
-#[derive(Debug)]
+#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
 struct Particle {
     p: Point3,
     v: Point3,
     a: Point3,
 }
 
-fn is_nonnegative_integer(x: f64) -> bool {
-    x >= 0.0 && (x - x.round()).abs() <= std::f64::EPSILON
-}
-
-// a*x*x + b*x + c
-fn nonnegative_integer_solutions(a: f64, b: f64, c: f64) -> HashSet<i64> {
-    let mut solutions = HashSet::new();
-    if a <= std::f64::EPSILON {
-        if b <= std::f64::EPSILON {
-            if c <= std::f64::EPSILON {
-                solutions.insert(0);
-            }
-            return solutions;
-        }
-        let x = c / b;
-        if is_nonnegative_integer(x) { solutions.insert(x as i64); }
-        return solutions;
-    }
-    let ss = b*b - 4.0*a*c;
-    if ss < 0.0 {
-        return solutions;
-    }
-    let s = ss.sqrt();
-    let l = (-b + s) / (2.0 * a);
-    let r = (-b - s) / (2.0 * a);
-    if is_nonnegative_integer(l) { solutions.insert(l as i64); }
-    if is_nonnegative_integer(r) { solutions.insert(r as i64); }
-    solutions
-}
-
-
 impl Particle {
-    fn point(&self, t: i64) {
-        let tt = t*t;
-        Point3(
-            self.p.0 + self.v.0 * t + self.a.0 * tt,
-            self.p.1 + self.v.1 * t + self.a.1 * tt,
-            self.p.2 + self.v.2 * t + self.a.2 * tt,
-        );
-    }
-
-    fn collision_time(&self, other: &Particle) -> Option<i64> {
-        let mut s0 = nonnegative_integer_solutions(
-            (self.p.0 - other.p.0) as f64,
-            (self.v.0 - other.v.0) as f64,
-            (self.a.0 - other.a.0) as f64,
-        );
-        let mut s1 = nonnegative_integer_solutions(
-            (self.p.1 - other.p.1) as f64,
-            (self.v.1 - other.v.1) as f64,
-            (self.a.1 - other.a.1) as f64,
-        );
-        s0 = s0.intersection(&s1).map(|&i| i.clone()).collect();
-        s1 = nonnegative_integer_solutions(
-            (self.p.2 - other.p.2) as f64,
-            (self.v.2 - other.v.2) as f64,
-            (self.a.2 - other.a.2) as f64,
-        );
-        s0 = s0.intersection(&s1).map(|&i| i.clone()).collect();
-        match s0.iter().next() {
-            Some(&i) => Some(i),
-            None => None,
+    fn step(&self) -> Particle {
+        let v = self.v + self.a;
+        Particle {
+            p: self.p + v,
+            v: v,
+            a: self.a,
         }
     }
 }
+
 
 type ParseParticleError = ParseSplitError<ParsePoint3Error>;
 
@@ -153,12 +84,24 @@ impl FromStr for Particle {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 struct Point3(i64, i64, i64);
 
 impl Point3 {
     fn norm_1(&self) -> i64 {
         self.0.abs() + self.1.abs() + self.2.abs()
+    }
+}
+
+impl Add for Point3 {
+    type Output = Point3;
+
+    fn add(self, other: Self) -> Point3 {
+        Point3(
+            self.0 + other.0,
+            self.1 + other.1,
+            self.2 + other.2,
+        )
     }
 }
 
@@ -203,5 +146,19 @@ impl FromStr for Point3 {
             return Err(ParseSplitError::WrongSize(coords.len()))
         }
         Ok(Point3(coords[0], coords[1], coords[2]))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_part_2() {
+        use part_2;
+        let input = "p=<-6,0,0>, v=< 3,0,0>, a=< 0,0,0>
+p=<-4,0,0>, v=< 2,0,0>, a=< 0,0,0>
+p=<-2,0,0>, v=< 1,0,0>, a=< 0,0,0>
+p=< 3,0,0>, v=<-1,0,0>, a=< 0,0,0>";
+        assert_eq!(part_2(input), 1);
+        // p=< 0,0,0>, v=<-1,0,0>, a=< 0,0,0>"
     }
 }
