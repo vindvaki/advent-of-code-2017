@@ -35,36 +35,11 @@ impl<K: PartialEq + Eq + Hash, V: PartialEq + Eq + Hash> InsertAt for HashMap<K,
     }
 }
 
-trait GraphTraversal {
-    fn <Collection> traverse_graph(&self,  ) {
-        let distance_map = HashMap<>;
-    }
-
-    fn bfs
-}
-
-fn parse_neighbor_map(input: &str) -> NeighborMap {
-    let mut port_to_components = HashMap::new();
-
-    for component_s in input.lines() {
-        let component_vec: Vec<usize> = component_s.split('/').map(|s| s.parse::<usize>().unwrap()).collect();
-        let component = (component_vec[0], component_vec[1]);
-
-        port_to_components.insert_at(component.0.clone(), component.clone());
-        port_to_components.insert_at(component.1.clone(), component.clone());
-    }
-
-    let mut neighbor_map = NeighborMap::new();
-
-    for (_, ref overlapping) in port_to_components.iter() {
-        for u in overlapping.iter() {
-            for v in overlapping.iter() {
-                if u != v {
-                    neighbor_map.insert_at(u.clone(), v.clone());
-                }
-            }
-        }
-    }
-
-    neighbor_map
+fn parse_component(input: &str) -> (usize, usize) {
+    let mut iter = input
+        .split('/')
+        .map(|s| s.parse::<usize>().unwrap());
+    let a = iter.next().unwrap();
+    let b = iter.next().unwrap();
+    (a, b)
 }
