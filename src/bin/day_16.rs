@@ -107,12 +107,4 @@ mod tests {
         let s = format!("{}", part_1("s1,x3/4,pe/b\n", 5));
         assert_eq!(s, "baedc");
     }
-
-    #[test]
-    fn test_part_2() {
-        use part_2;
-        let s = format!("{}", part_2("s1,x3/4,pe/b\n", 5));
-        assert_eq!(s, "ceadb");
-    }
-
 }
